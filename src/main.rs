@@ -4,7 +4,7 @@ use chrono::{NaiveDate, Utc};
 use clap::Parser;
 
 use realm::{
-    exchange_rate_api_client::ExchangeRateClient, fiat::currency::Currency, utils::DateFormat,
+    fiat::currency::Currency, fiat::exchange_rate_api_client::ExchangeRateClient, utils::DateFormat,
 };
 
 #[derive(Parser, Debug)]
