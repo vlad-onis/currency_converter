@@ -5,7 +5,7 @@ use std::env;
 use std::path::Path;
 use thiserror::Error;
 
-use super::fiat::currency::Currency;
+use super::currency::Currency;
 
 #[derive(Error, Debug)]
 pub enum ExchangeRateClientError {
