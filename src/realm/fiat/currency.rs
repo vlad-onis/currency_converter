@@ -11,7 +11,7 @@ impl From<String> for Currency {
 
 impl From<Currency> for String {
     fn from(source: Currency) -> String {
-        source.0.clone()
+        source.0
     }
 }
 

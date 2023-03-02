@@ -3,9 +3,7 @@ mod realm;
 use chrono::{NaiveDate, Utc};
 use clap::Parser;
 
-use realm::{
-    fiat::currency::Currency, fiat::exchange_rate_api_client::ExchangeRateClient, utils::DateFormat, fiat::rate_converter::convert
-};
+use realm::{fiat::currency::Currency, fiat::rate_converter::convert, utils::DateFormat};
 
 #[derive(Parser, Debug)]
 pub struct Args {
@@ -27,7 +25,6 @@ pub struct Args {
 
 #[tokio::main]
 async fn main() {
-
     let args = Args::parse();
 
     let date_format = match args.format {
@@ -49,5 +46,5 @@ async fn main() {
         None => Currency("EUR".to_string()),
     };
 
-    convert(base, Currency(String::from("RON")), 50.0, date).await;
+    convert(base, Currency(String::from("EUR")), 50.0, date).await;
 }

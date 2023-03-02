@@ -1,12 +1,12 @@
 use chrono::prelude::*;
 use dotenv_loader::parser::Parser;
 use reqwest;
+use serde::Deserialize;
 use std::collections::HashMap;
 use std::env;
 use std::ops::Deref;
 use std::path::Path;
 use thiserror::Error;
-use serde::Deserialize;
 
 use super::currency::Currency;
 
