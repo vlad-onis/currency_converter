@@ -1,7 +1,10 @@
 use chrono::prelude::*;
 use dotenv_loader::parser::Parser;
 use reqwest;
+use serde::Deserialize;
+use std::collections::HashMap;
 use std::env;
+use std::ops::Deref;
 use std::path::Path;
 use thiserror::Error;
 
@@ -11,6 +14,19 @@ use super::currency::Currency;
 pub enum ExchangeRateClientError {
     #[error("Could not load api key for the exchange rate api")]
     ApiKeyLoadFailure,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct GetRatesResponse {
+    pub rates: HashMap<Currency, f64>,
+}
+
+impl Deref for GetRatesResponse {
+    type Target = HashMap<Currency, f64>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.rates
+    }
 }
 
 pub struct ExchangeRateClient {
@@ -34,7 +50,7 @@ impl ExchangeRateClient {
         Err(ExchangeRateClientError::ApiKeyLoadFailure)
     }
 
-    pub async fn get_rates(&self, base: Currency, date: NaiveDate) {
+    pub async fn get_rates(&self, base: Currency, date: NaiveDate) -> GetRatesResponse {
         let url = format!(
             "https://api.apilayer.com/exchangerates_data/{}?base={}",
             date, base.0
@@ -47,10 +63,10 @@ impl ExchangeRateClient {
             .send()
             .await
             .unwrap()
-            .text()
+            .json::<GetRatesResponse>()
             .await
             .unwrap();
 
-        println!("{response}");
+        response
     }
 }
