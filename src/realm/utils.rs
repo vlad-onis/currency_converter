@@ -11,9 +11,9 @@ pub enum DateFormat {
     Ymd,
 }
 
-impl TryFrom<String> for DateFormat {
+impl TryFrom<&str> for DateFormat {
     type Error = DateFormatError;
-    fn try_from(source: String) -> Result<DateFormat, Self::Error> {
+    fn try_from(source: &str) -> Result<DateFormat, Self::Error> {
         match source.to_lowercase().as_str() {
             "ymd" => Ok(DateFormat::Ymd),
             _ => Err(DateFormatError::UnsupportedDateFormat),

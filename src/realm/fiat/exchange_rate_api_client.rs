@@ -1,19 +1,26 @@
 use chrono::prelude::*;
 use dotenv_loader::parser::Parser;
-use reqwest;
+use reqwest::{self};
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::env;
 use std::ops::Deref;
 use std::path::Path;
 use thiserror::Error;
+use tracing::debug;
 
 use super::currency::Currency;
 
 #[derive(Error, Debug)]
 pub enum ExchangeRateClientError {
     #[error("Could not load api key for the exchange rate api")]
-    ApiKeyLoadFailure,
+    ApiKeyLoad,
+
+    #[error("Failed to send the request to the api : {0}")]
+    Api(reqwest::Error),
+
+    #[error("Failed deserializing the response from the api. Your request may be erroneous: {0}")]
+    ResponseDeserialization(reqwest::Error),
 }
 
 #[derive(Deserialize, Debug)]
@@ -47,26 +54,35 @@ impl ExchangeRateClient {
             return Ok(ExchangeRateClient { api_key });
         }
 
-        Err(ExchangeRateClientError::ApiKeyLoadFailure)
+        Err(ExchangeRateClientError::ApiKeyLoad)
     }
 
-    pub async fn get_rates(&self, base: Currency, date: NaiveDate) -> GetRatesResponse {
+    #[allow(clippy::redundant_closure)]
+    pub async fn get_rates(
+        &self,
+        base: Currency,
+        date: NaiveDate,
+    ) -> Result<GetRatesResponse, ExchangeRateClientError> {
         let url = format!(
             "https://api.apilayer.com/exchangerates_data/{}?base={}",
             date, base.0
         );
 
         let client = reqwest::Client::new();
-        let response = client
-            .get(url)
-            .header("apikey", self.api_key.clone())
+
+        let request = client.get(url).header("apikey", self.api_key.clone());
+
+        // TODO: This is logging sensitive information like api key, must be resolved.
+        debug!("Sending request: {request:?}");
+
+        let response = request
             .send()
             .await
-            .unwrap()
+            .map_err(|e| ExchangeRateClientError::Api(e))?
             .json::<GetRatesResponse>()
             .await
-            .unwrap();
+            .map_err(|e| ExchangeRateClientError::ResponseDeserialization(e))?;
 
-        response
+        Ok(response)
     }
 }
