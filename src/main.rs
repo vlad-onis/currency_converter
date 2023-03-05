@@ -85,7 +85,7 @@ async fn main() -> Result<(), RateConversionError> {
 
     let conversion_result = convert(
         base,
-        Currency(String::from("EUR")),
+        Currency(String::from("RON")),
         50.0,
         date,
         exchange_api_client,
