@@ -16,7 +16,7 @@ pub async fn convert(
     to: Currency,
     amount: f64,
     date: NaiveDate,
-) -> Result<(), RateConversionError> {
+) -> Result<f64, RateConversionError> {
     let exchange_api_client =
         ExchangeRateClient::new().map_err(|e| RateConversionError::ExchangeApiClientFailure(e))?;
 
@@ -30,5 +30,5 @@ pub async fn convert(
     let result: f64 = amount * conversion_rate;
     println!("{amount} {from:?} is equal to {result} {to:?}");
     println!("{date:?}");
-    Ok(())
+    Ok(result)
 }

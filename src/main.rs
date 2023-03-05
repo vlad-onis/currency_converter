@@ -1,32 +1,115 @@
+// pub mod realm;
+
+// use chrono::{NaiveDate, Utc};
+// use clap::Parser;
+// use realm::{
+//     fiat::currency::Currency,
+//     fiat::exchange_rate_api_client::ExchangeRateClient,
+//     fiat::rate_converter::{convert, RateConversionError},
+//     utils::DateFormat,
+// };
+// use tracing::{debug, error, warn, Level};
+// use tracing_subscriber::FmtSubscriber;
+
+// #[derive(Parser, Debug)]
+// pub struct Args {
+//     #[arg(short, long, required = false)]
+//     #[clap(requires = "format")]
+//     date: Option<String>,
+
+//     #[arg(short, long, required = false, help = "Supported formats: \"ymd\"")]
+//     format: Option<String>,
+
+//     #[arg(
+//         short,
+//         long,
+//         required = false,
+//         help = "Base currency for our rate converter, defaults to EUR"
+//     )]
+//     base_currency: Option<String>,
+// }
+
+
+
+// #[tokio::main]
+// async fn main() -> Result<(), RateConversionError> {
+//     set_tracing();
+//     let args = Args::parse();
+
+//     let date_format = match args.format {
+//         Some(format) => {
+//             let date_format = DateFormat::try_from(format.as_str());
+//             match date_format {
+//                 Ok(date_format) => date_format,
+//                 Err(_) => {
+//                     warn!("Format: {} is not supported, defaulting to YMD", format);
+//                     DateFormat::Ymd
+//                 }
+//             }
+//         }
+//         None => DateFormat::Ymd,
+//     };
+
+//     let date = match args.date {
+//         Some(date_string) => {
+//             NaiveDate::parse_from_str(&date_string, String::from(date_format.clone()).as_str())
+//                 .unwrap_or_else(|_| {
+//                     tracing::warn!(
+//                 "Failed to parse date from input: {date_string}. Defaulting to today's date"
+//             );
+//                     Utc::now().date_naive()
+//                 })
+//         }
+//         None => Utc::now().date_naive(),
+//     };
+
+//     // TODO: Currency needs some validation for the inner string
+//     let base = match args.base_currency {
+//         Some(base_currency) => Currency(base_currency),
+//         None => Currency("EUR".to_string()),
+//     };
+
+//     debug!("Input date: {date:?}");
+//     debug!("Dateformat: {date_format:?}");
+//     debug!("Base currency: {base:?}");
+
+//     #[allow(clippy::redundant_closure)]
+//     let exchange_api_client = ExchangeRateClient::new()
+//         .map_err(|e| RateConversionError::ExchangeApiClientFailure(e))
+//         .unwrap();
+
+//     let conversion_result = convert(
+//         base,
+//         Currency(String::from("RON")),
+//         50.0,
+//         date,
+//         exchange_api_client,
+//     )
+//     .await;
+//     if let Err(conversion_error) = conversion_result {
+//         error!("{conversion_error}");
+//     }
+
+//     Ok(())
+// }
+
 mod realm;
 
-use chrono::{NaiveDate, Utc};
-use clap::Parser;
-use realm::{
-    fiat::currency::Currency,
-    fiat::rate_converter::{convert, RateConversionError},
-    utils::DateFormat,
-};
-use tracing::{debug, error, warn, Level};
+// use chrono::{NaiveDate, Utc};
+// use clap::Parser;
+// use realm::{
+//     fiat::currency::Currency,
+//     fiat::rate_converter::{convert, RateConversionError},
+//     utils::DateFormat,
+// };
+// use tracing::{debug, error, warn, Level};
+
+use tracing::{info, Level};
 use tracing_subscriber::FmtSubscriber;
+use axum::{Router, routing::get};
+use tokio;
 
-#[derive(Parser, Debug)]
-pub struct Args {
-    #[arg(short, long, required = false)]
-    #[clap(requires = "format")]
-    date: Option<String>,
-
-    #[arg(short, long, required = false, help = "Supported formats: \"ymd\"")]
-    format: Option<String>,
-
-    #[arg(
-        short,
-        long,
-        required = false,
-        help = "Base currency for our rate converter, defaults to EUR"
-    )]
-    base_currency: Option<String>,
-}
+use realm::api::rate_conversion_handler::handle_rate_conversion;
 
 fn set_tracing() {
     let subscriber = FmtSubscriber::builder()
@@ -36,51 +119,23 @@ fn set_tracing() {
 }
 
 #[tokio::main]
-async fn main() -> Result<(), RateConversionError> {
+async fn main() {
     set_tracing();
-    let args = Args::parse();
 
-    let date_format = match args.format {
-        Some(format) => {
-            let date_format = DateFormat::try_from(format.as_str());
-            match date_format {
-                Ok(date_format) => date_format,
-                Err(_) => {
-                    warn!("Format: {} is not supported, defaulting to YMD", format);
-                    DateFormat::Ymd
-                }
-            }
-        }
-        None => DateFormat::Ymd,
-    };
+    let app = Router::new().route("/", get(handle_rate_conversion));
+    let port = "3000";
+    let ip = "0.0.0.0";
 
-    let date = match args.date {
-        Some(date_string) => {
-            NaiveDate::parse_from_str(&date_string, String::from(date_format.clone()).as_str())
-                .unwrap_or_else(|_| {
-                    tracing::warn!(
-                "Failed to parse date from input: {date_string}. Defaulting to today's date"
-            );
-                    Utc::now().date_naive()
-                })
-        }
-        None => Utc::now().date_naive(),
-    };
+    let mut address:String = String::from(ip);
+    address.push_str(":");
+    address.push_str(port);
+    let address = address;
 
-    // TODO: Currency needs some validation for the inner string
-    let base = match args.base_currency {
-        Some(base_currency) => Currency(base_currency),
-        None => Currency("EUR".to_string()),
-    };
+    info!("Starting the Http server on port: {port}");
 
-    debug!("Input date: {date:?}");
-    debug!("Dateformat: {date_format:?}");
-    debug!("Base currency: {base:?}");
-
-    let conversion_result = convert(base, Currency(String::from("EUR")), 50.0, date).await;
-    if let Err(conversion_error) = conversion_result {
-        error!("{conversion_error}");
-    }
-
-    Ok(())
+    // run it with hyper on localhost:3000
+    axum::Server::bind(&address.parse().unwrap())
+        .serve(app.into_make_service())
+        .await
+        .unwrap();
 }
