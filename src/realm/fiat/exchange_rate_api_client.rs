@@ -1,19 +1,13 @@
+use async_trait::async_trait;
 use chrono::prelude::*;
 use dotenv_loader::parser::Parser;
+use mockall::*;
 use reqwest::{self};
 use serde::Deserialize;
 use thiserror::Error;
 use tracing::debug;
-use async_trait::async_trait;
-use mockall::*;
 
-use std::{ 
-    collections::HashMap,
-    env,
-    ops::Deref,
-    path::Path};
-
-
+use std::{collections::HashMap, env, ops::Deref, path::Path};
 
 use super::currency::Currency;
 
