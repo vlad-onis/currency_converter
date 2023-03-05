@@ -5,6 +5,7 @@ use clap::Parser;
 use realm::{
     fiat::currency::Currency,
     fiat::rate_converter::{convert, RateConversionError},
+    fiat::exchange_rate_api_client::ExchangeRateClient,
     utils::DateFormat,
 };
 use tracing::{debug, error, warn, Level};
@@ -77,7 +78,10 @@ async fn main() -> Result<(), RateConversionError> {
     debug!("Dateformat: {date_format:?}");
     debug!("Base currency: {base:?}");
 
-    let conversion_result = convert(base, Currency(String::from("EUR")), 50.0, date).await;
+    let exchange_api_client =
+        ExchangeRateClient::new().map_err(|e| RateConversionError::ExchangeApiClientFailure(e)).unwrap();
+
+    let conversion_result = convert(base, Currency(String::from("EUR")), 50.0, date, exchange_api_client).await;
     if let Err(conversion_error) = conversion_result {
         error!("{conversion_error}");
     }
