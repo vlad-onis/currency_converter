@@ -1,13 +1,13 @@
+use async_trait::async_trait;
 use chrono::prelude::*;
 use dotenv_loader::parser::Parser;
+use mockall::*;
 use reqwest::{self};
 use serde::Deserialize;
-use std::collections::HashMap;
-use std::env;
-use std::ops::Deref;
-use std::path::Path;
 use thiserror::Error;
 use tracing::debug;
+
+use std::{collections::HashMap, env, ops::Deref, path::Path};
 
 use super::currency::Currency;
 
@@ -56,9 +56,22 @@ impl ExchangeRateClient {
 
         Err(ExchangeRateClientError::ApiKeyLoad)
     }
+}
 
+#[async_trait]
+#[automock]
+pub trait GetRates {
+    async fn get_rates(
+        &self,
+        base: Currency,
+        date: NaiveDate,
+    ) -> Result<GetRatesResponse, ExchangeRateClientError>;
+}
+
+#[async_trait]
+impl GetRates for ExchangeRateClient {
     #[allow(clippy::redundant_closure)]
-    pub async fn get_rates(
+    async fn get_rates(
         &self,
         base: Currency,
         date: NaiveDate,
@@ -83,6 +96,7 @@ impl ExchangeRateClient {
             .await
             .map_err(|e| ExchangeRateClientError::ResponseDeserialization(e))?;
 
+        debug!("Rates: {:?}", response);
         Ok(response)
     }
 }
