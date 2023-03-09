@@ -1,5 +1,8 @@
 use serde::Deserialize;
 
+// TODO: Implement Deref or provide getters for the inner field
+// TODO: Do some validation when creating the currency.
+
 #[derive(Deserialize, Debug, Hash, PartialEq, Eq, Clone)]
 pub struct Currency(pub String);
 
