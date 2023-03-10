@@ -33,8 +33,8 @@ pub async fn convert<S: GetRates>(
 
 #[cfg(test)]
 mod tests {
-    use chrono::Utc;
-    use std::collections::HashMap;
+    use chrono::{NaiveDate, Utc};
+    use std::{collections::HashMap, str::FromStr};
 
     use super::convert;
     use crate::realm::fiat::{
@@ -43,14 +43,14 @@ mod tests {
     };
 
     #[tokio::test]
-    async fn test_convert() {
+    async fn test_valid_conversion() {
         let mut get_rates_mock = MockGetRates::new();
 
         let mut expectected_rates: HashMap<Currency, f64> = HashMap::new();
-        expectected_rates.insert(Currency("RON".to_string()), 4.932639);
+        expectected_rates.insert(Currency::parse("RON").unwrap(), 4.932639);
 
-        let base = Currency("EUR".to_string());
-        let date = Utc::now().date_naive();
+        let base = Currency::parse("EUR").unwrap();
+        let date = NaiveDate::from_str("2023-03-04").unwrap();
 
         // Move is used because the closure may outlide the test function
         // So we want to take ownership of the arguments instead of borrowing them
@@ -66,7 +66,7 @@ mod tests {
 
         let result = convert(
             base,
-            Currency("RON".to_string()),
+            Currency::parse("RON").unwrap(),
             50.00,
             date,
             get_rates_mock,
