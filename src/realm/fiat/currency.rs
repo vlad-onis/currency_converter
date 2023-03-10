@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use serde::Deserialize;
 
 // TODO: Implement Deref or provide getters for the inner field
@@ -15,6 +17,12 @@ impl From<String> for Currency {
 impl From<Currency> for String {
     fn from(source: Currency) -> String {
         source.0
+    }
+}
+
+impl Display for Currency {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
     }
 }
 

@@ -1,4 +1,5 @@
 use axum::extract::{Query, Path};
+use axum::response::{Response, IntoResponse};
 use chrono::Utc;
 use serde::Deserialize;
 
@@ -12,20 +13,21 @@ use crate::realm::{
 #[derive(Deserialize, Debug)]
 pub struct Params {
     to: Currency,
-    from: Currency
+    from: Currency,
+    amount: f64
 }
 
-pub async fn handler(params: Query<Params>) -> String {
+pub async fn handler(params: Query<Params>) -> Response {
     
-    // Handle this error
+    // TODO: Handle this error
     let exchange_rate_client = ExchangeRateClient::new().unwrap();
     
     let result = convert(
         params.from.clone(), 
         params.to.clone(),
-        50.00, 
+        params.amount, 
         Utc::now().date_naive(), 
         exchange_rate_client).await.unwrap();
-
-    format!("Result of the conversion is: {}", result)
+        
+    format!("{} {} = {} {}", params.amount, params.from, result, params.to).into_response()
 }
