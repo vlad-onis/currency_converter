@@ -13,13 +13,13 @@ use super::currency::Currency;
 
 #[derive(Error, Debug)]
 pub enum ExchangeRateClientError {
-    #[error("Could not load api key for the exchange rate api")]
+    #[error("ApiKeyLoad: Could not load api key for the exchange rate api")]
     ApiKeyLoad,
 
-    #[error("Failed to send the request to the api : {0}")]
+    #[error("Api: Failed to send the request to the api : {0}")]
     Api(reqwest::Error),
 
-    #[error("Failed deserializing the response from the api. Your request may be erroneous: {0}")]
+    #[error("ResponseDeserialization: Failed deserializing the response from the api. Your request may be erroneous: {0}")]
     ResponseDeserialization(reqwest::Error),
 }
 
@@ -36,6 +36,7 @@ impl Deref for GetRatesResponse {
     }
 }
 
+#[derive(Debug)]
 pub struct ExchangeRateClient {
     pub api_key: String,
 }
@@ -78,7 +79,8 @@ impl GetRates for ExchangeRateClient {
     ) -> Result<GetRatesResponse, ExchangeRateClientError> {
         let url = format!(
             "https://api.apilayer.com/exchangerates_data/{}?base={}",
-            date, base.0
+            date,
+            base.symbol()
         );
 
         let client = reqwest::Client::new();

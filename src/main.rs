@@ -1,18 +1,18 @@
-mod realm;
 mod api;
+mod realm;
 
 use chrono::{NaiveDate, Utc};
 use clap::Parser;
 use tracing::{debug, error, warn, Level};
 use tracing_subscriber::FmtSubscriber;
 
+use api::server::start_server;
 use realm::{
     fiat::currency::Currency,
     fiat::exchange_rate_api_client::ExchangeRateClient,
     fiat::rate_converter::{convert, RateConversionError},
     utils::DateFormat,
 };
-use api::server::start_server;
 
 #[derive(Parser, Debug)]
 pub struct Args {
@@ -45,7 +45,6 @@ async fn main() -> Result<(), RateConversionError> {
     start_server().await;
 
     // Below is an exaple of the rate converter usage with CLI args
-
 
     // let args = Args::parse();
     // let date_format = match args.format {
@@ -101,8 +100,6 @@ async fn main() -> Result<(), RateConversionError> {
     // if let Err(conversion_error) = conversion_result {
     //     error!("{conversion_error}");
     // }
-
-
 
     Ok(())
 }
